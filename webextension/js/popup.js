@@ -227,25 +227,33 @@ Logic.registerPanel(P_CONTAINERS_LIST, {
 
     Logic.identities().forEach(identity => {
       const hasTabs = (identity.hasHiddenTabs || identity.hasOpenTabs);
-      const arrowClass = hasTabs ? "show-tabs-img" : "no-tabs-img";
       const tr = document.createElement("tr");
-      fragment.appendChild(tr);
+      const context = document.createElement("td");
+      const manage = document.createElement("td");
+
       tr.classList.add("container-panel-row");
-      if (hasTabs) {
-        tr.classList.add("container-panel-row", "clickable");
-      }
-      tr.innerHTML = `
-        <td>
-          <div class="userContext-icon open-newtab"
+      context.classList.add("userContext-wrapper", "open-newtab");
+      manage.classList.add("show-tabs", "pop-button");
+      context.innerHTML = `
+        <div class="userContext-icon-wrapper">
+          <div class="userContext-icon"
             data-identity-icon="${identity.image}"
             data-identity-color="${identity.color}">
           </div>
-        </td>
-        <td class="container-name">${identity.name}</td>
-        <td class="show-tabs"><img src="/img/container-arrow.svg" class="show-tabs ${arrowClass}" /></td>`;
+        </div>
+        <div class="container-name">${identity.name}</div>`;
+      manage.innerHTML = "<img src='/img/container-arrow.svg' class='show-tabs pop-button__image-small' />";
+
+      fragment.appendChild(tr);
+
+      tr.appendChild(context);
+
+      if (hasTabs) {
+        tr.appendChild(manage);
+      }
 
       tr.addEventListener("click", e => {
-        if (e.target.matches(".open-newtab")) {
+        if (e.target.matches(".open-newtab") || e.target.parentNode.matches(".open-newtab")) {
           browser.runtime.sendMessage({
             method: "showTabs",
             userContextId: identity.userContextId
@@ -357,7 +365,6 @@ Logic.registerPanel(P_CONTAINER_INFO, {
 
       // On click, we activate this tab. But only if this tab is active.
       if (tab.active) {
-        tr.classList.add("clickable");
         tr.addEventListener("click", () => {
           browser.runtime.sendMessage({
             method: "showTab",
@@ -383,10 +390,6 @@ Logic.registerPanel(P_CONTAINERS_EDIT, {
 
   // This method is called when the object is registered.
   initialize() {
-    document.querySelector("#edit-containers-add-link").addEventListener("click", () => {
-      Logic.showPanel(P_CONTAINER_EDIT, { name: Logic.generateIdentityName() });
-    });
-
     document.querySelector("#exit-edit-mode-link").addEventListener("click", () => {
       Logic.showPanel(P_CONTAINERS_LIST);
     });
@@ -398,32 +401,35 @@ Logic.registerPanel(P_CONTAINERS_EDIT, {
     Logic.identities().forEach(identity => {
       const tr = document.createElement("tr");
       fragment.appendChild(tr);
+      tr.classList.add("container-panel-row");
       tr.innerHTML = `
-        <td>
-          <div class="userContext-icon"
-            data-identity-icon="${identity.image}"
-            data-identity-color="${identity.color}">
+        <td class="userContext-wrapper">
+          <div class="userContext-icon-wrapper">
+            <div class="userContext-icon"
+              data-identity-icon="${identity.image}"
+              data-identity-color="${identity.color}">
+            </div>
           </div>
+          <div class="container-name">${identity.name}</div>
         </td>
-        <td class="container-name">${identity.name}</td>
-        <td class="edit-container">
+        <td class="edit-container pop-button edit-container-icon">
           <img
             title="Edit ${identity.name} container"
             src="/img/container-edit.svg"
-            class="icon edit-container-icon clickable" />
+            class="pop-button__image" />
         </td>
-        <td class="remove-container" >
+        <td class="remove-container pop-button delete-container-icon" >
           <img
             title="Remove ${identity.name} container"
-            class="icon delete-container-icon clickable"
+            class="pop-button__image"
             src="/img/container-delete.svg"
           />
         </td>`;
 
       tr.addEventListener("click", e => {
-        if (e.target.matches(".edit-container-icon")) {
+        if (e.target.matches(".edit-container-icon") || e.target.parentNode.matches(".edit-container-icon")) {
           Logic.showPanel(P_CONTAINER_EDIT, identity);
-        } else if (e.target.matches(".delete-container-icon")) {
+        } else if (e.target.matches(".delete-container-icon") || e.target.parentNode.matches(".delete-container-icon")) {
           Logic.showPanel(P_CONTAINER_DELETE, identity);
         }
       });
